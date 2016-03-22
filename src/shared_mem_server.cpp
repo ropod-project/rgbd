@@ -20,8 +20,8 @@ SharedMemServer::SharedMemServer() : buffer_header(0)
 
 SharedMemServer::~SharedMemServer()
 {
-    if (!shared_mem_name_.empty())
-        ipc::shared_memory_object::remove(shared_mem_name_.c_str());
+//    if (!shared_mem_name_.empty())
+//        ipc::shared_memory_object::remove(shared_mem_name_.c_str());
 }
 
 // ----------------------------------------------------------------------------------------------------
@@ -53,10 +53,10 @@ void SharedMemServer::send(const Image& image)
     {
         // First time
         // Make sure possibly existing memory with same name is removed
-        ipc::shared_memory_object::remove(shared_mem_name_.c_str());
+//        ipc::shared_memory_object::remove(shared_mem_name_.c_str());
 
         //Create a shared memory object.
-        shm = ipc::shared_memory_object(ipc::create_only, shared_mem_name_.c_str(), ipc::read_write);
+        shm = ipc::shared_memory_object(ipc::open_or_create, shared_mem_name_.c_str(), ipc::read_write);
 
         //Set size
         shm.truncate(sizeof(BufferHeader) + image_data_size);
@@ -66,6 +66,8 @@ void SharedMemServer::send(const Image& image)
         mem_image = ipc::mapped_region(shm, ipc::read_write, sizeof(BufferHeader));
 
         buffer_header = new (mem_buffer_header.get_address()) BufferHeader;
+        ipc::scoped_lock<ipc::interprocess_mutex> lock(buffer_header->mutex);
+
         buffer_header->sequence_nr = 0;
 
         image_data = new (mem_image.get_address()) uchar[image_data_size];
