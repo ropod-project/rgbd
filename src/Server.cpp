@@ -1,9 +1,8 @@
 #include "rgbd/Server.h"
-#include "rgbd/RGBDMsg.h"
-#include "rgbd/Image.h"
 #include "rgbd/serialization.h"
 #include "rgbd/View.h"
 #include "rgbd/ros/conversions.h"
+#include "rgbd/Image.h"
 
 #include <opencv2/highgui/highgui.hpp>
 

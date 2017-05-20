@@ -11,9 +11,6 @@
 
 #include <ros/ros.h>
 
-#include "rgbd/RGBDMsg.h"
-#include <ros/callback_queue.h>
-
 #include "rgbd/types.h"
 
 // ROS message serialization
@@ -65,14 +62,10 @@ protected:
 
     ros::NodeHandle nh_;
 
-    ros::CallbackQueue cb_queue_;
-
     bool received_image_;
-    Image* image_ptr_;
+    ImagePtr image_ptr_;
 
     ROSImageSyncData ros_image_sync_data_;
-
-    void rgbdImageCallback(const rgbd::RGBDMsg::ConstPtr& msg);
 
     void camInfoCallback(const sensor_msgs::CameraInfoConstPtr& cam_info_msg);
 

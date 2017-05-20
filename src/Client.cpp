@@ -10,10 +10,6 @@ namespace rgbd {
 
 // ----------------------------------------------------------------------------------------
 
-
-
-// ----------------------------------------------------------------------------------------
-
 Client::Client()
 {
 }
@@ -37,14 +33,14 @@ void Client::initialize(const std::string& server_name)
 
 void Client::intializeROS(const std::string& rgb_image_topic, const std::string& depth_image_topic, const std::string& cam_info_topic)
 {
-  nh_.setCallbackQueue(&cb_queue_);
-
   ros_image_sync_data_.sub_cam_info_ = nh_.subscribe(cam_info_topic, 1, &Client::camInfoCallback, this);
 
   ros_image_sync_data_.sub_rgb_sync_ = ImageSubPtr(new message_filters::Subscriber<sensor_msgs::Image>(nh_, rgb_image_topic, 1));
   ros_image_sync_data_.sub_depth_sync_ = ImageSubPtr(new message_filters::Subscriber<sensor_msgs::Image>(nh_, depth_image_topic, 1));
 
-  ros_image_sync_data_.sync_ = SyncPtr(new message_filters::Synchronizer<KinectApproxPolicy>(KinectApproxPolicy(10), *ros_image_sync_data_.sub_rgb_sync_, *ros_image_sync_data_.sub_depth_sync_));
+  ros_image_sync_data_.sync_ = SyncPtr(new message_filters::Synchronizer<KinectApproxPolicy>
+                                       (KinectApproxPolicy(10), *ros_image_sync_data_.sub_rgb_sync_,
+                                        *ros_image_sync_data_.sub_depth_sync_));
   ros_image_sync_data_.sync_->registerCallback(boost::bind(&Client::imageCallback, this, _1, _2));
 }
 
@@ -52,9 +48,9 @@ void Client::intializeROS(const std::string& rgb_image_topic, const std::string&
 
 ImagePtr Client::nextImage()
 {
-  image_ptr_ = 0;
-  cb_queue_.callAvailable();
-  return ImagePtr(image_ptr_);
+  image_ptr_.reset();
+  ros::spinOnce();
+  return image_ptr_;
 }
 
 bool Client::nextImage(Image& image)
@@ -115,15 +111,7 @@ void Client::imageCallback(sensor_msgs::ImageConstPtr rgb_image_msg, sensor_msgs
     return;
   }
 
-  if (!image_ptr_) {
-    // in this case, the pointer will always be wrapped in a shared ptr, so no mem leaks (see nextImage() )
-    image_ptr_ = new Image();
-  }
-
-  image_ptr_->rgb_image_ = img_ptr->image;
-  image_ptr_->depth_image_ = depth_img_ptr->image;
-  image_ptr_->frame_id_ = rgb_image_msg->header.frame_id;
-  image_ptr_->timestamp_ = rgb_image_msg->header.stamp.toSec();
+  image_ptr_ = ImagePtr(new Image(img_ptr->image, depth_img_ptr->image, ros_image_sync_data_.cam_model_, rgb_image_msg->header.frame_id, rgb_image_msg->header.stamp.toSec()));
 }
 
 // ----------------------------------------------------------------------------------------
