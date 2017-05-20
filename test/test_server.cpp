@@ -8,7 +8,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "rgbd_transport_test_server");
 
     rgbd::Server server;
-    server.initialize("test", rgbd::RGB_STORAGE_LOSSLESS, rgbd::DEPTH_STORAGE_LOSSLESS);
+    server.initialize("test");
 
     ros::Rate r(30);
 

@@ -15,17 +15,31 @@
 #include <ros/callback_queue.h>
 
 #include "rgbd/types.h"
-#include "rgbd/shared_mem_client.h"
-
 
 // ROS message serialization
+#include <cv_bridge/cv_bridge.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <sensor_msgs/image_encodings.h>
+#include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
 
 namespace rgbd {
 
-// Forward declare struct that holds all approximate time sync stuff
-struct ROSImageSyncData;
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> KinectApproxPolicy;
+typedef boost::shared_ptr<message_filters::Synchronizer<KinectApproxPolicy> > SyncPtr;
+typedef boost::shared_ptr<message_filters::Subscriber<sensor_msgs::Image> > ImageSubPtr;
+
+struct ROSImageSyncData
+{
+  ImageSubPtr sub_rgb_sync_;
+  ImageSubPtr sub_depth_sync_;
+  SyncPtr sync_;
+  ros::Subscriber sub_cam_info_;
+  image_geometry::PinholeCameraModel cam_model_;
+};
 
 class Image;
 
@@ -37,29 +51,26 @@ public:
 
     virtual ~Client();
 
-    void intialize(const std::string& server_name);
+    void initialize(const std::string& server_name);
 
-    void intialize(const std::string& rgb_image_topic, const std::string& depth_image_topic, const std::string& cam_info_topic);
-
-    bool initialized() { return !sub_image_.getTopic().empty() || ros_image_sync_data_; }
-
-    bool nextImage(Image& image);
+    bool initialized() { return ros_image_sync_data_.sync_.get(); }
 
     ImagePtr nextImage();
 
+    bool nextImage(Image& image);
+
 protected:
 
-    SharedMemClient shared_mem_client_;
+    void intializeROS(const std::string& rgb_image_topic, const std::string& depth_image_topic, const std::string& cam_info_topic);
 
-    ros::NodeHandle* nh_;
+    ros::NodeHandle nh_;
 
-    ros::Subscriber sub_image_;
     ros::CallbackQueue cb_queue_;
 
     bool received_image_;
     Image* image_ptr_;
 
-    ROSImageSyncData* ros_image_sync_data_;
+    ROSImageSyncData ros_image_sync_data_;
 
     void rgbdImageCallback(const rgbd::RGBDMsg::ConstPtr& msg);
 

@@ -13,7 +13,8 @@ class Image;
 
 // SERIALIZATION
 
-bool serialize(const Image& image, tue::serialization::OutputArchive& a,
+bool serialize(const Image& image,
+               tue::serialization::OutputArchive& a,
                RGBStorageType rgb_type,
                DepthStorageType depth_type);
 

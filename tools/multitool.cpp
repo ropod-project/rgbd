@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         if (opt == "--rgbd")
         {
             client = new rgbd::Client;
-            client->intialize(arg);
+            client->initialize(arg);
         }
         else
         {

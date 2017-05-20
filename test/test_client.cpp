@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     rgbd::Client client;
-    client.intialize("test");
+    client.initialize("test");
 
     ros::Rate r(30);
     while (ros::ok())
