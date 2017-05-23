@@ -24,19 +24,19 @@ Client::~Client()
 
 void Client::initialize(const std::string& server_name)
 {
-  this->intializeROS(server_name + "/rgb/image_rect_color",
-                     server_name + "/depth_registered/sw_registered/image_rect_raw",
-                     server_name + "/rgb/camera_info");
+  nh_ = ros::NodeHandle(server_name);
+  this->intializeROS();
 }
 
 // ----------------------------------------------------------------------------------------
 
-void Client::intializeROS(const std::string& rgb_image_topic, const std::string& depth_image_topic, const std::string& cam_info_topic)
+void Client::intializeROS()
 {
-  ros_image_sync_data_.sub_cam_info_ = nh_.subscribe(cam_info_topic, 1, &Client::camInfoCallback, this);
+  rgb_image_transport_ = ImageTransportPtr(new image_transport::ImageTransport(ros::NodeHandle(nh_, "rgb")));
+  depth_image_transport_ = ImageTransportPtr(new image_transport::ImageTransport(ros::NodeHandle(nh_, "depth_registered/sw_registered")));
 
-  ros_image_sync_data_.sub_rgb_sync_ = ImageSubPtr(new message_filters::Subscriber<sensor_msgs::Image>(nh_, rgb_image_topic, 1));
-  ros_image_sync_data_.sub_depth_sync_ = ImageSubPtr(new message_filters::Subscriber<sensor_msgs::Image>(nh_, depth_image_topic, 1));
+  ros_image_sync_data_.sub_rgb_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*rgb_image_transport_, "image_rect_color", 1, image_transport::TransportHints("compressed")));
+  ros_image_sync_data_.sub_depth_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*depth_image_transport_, "image_rect", 1, image_transport::TransportHints("compressedDepth")));
 
   ros_image_sync_data_.sync_ = SyncPtr(new message_filters::Synchronizer<KinectApproxPolicy>
                                        (KinectApproxPolicy(10), *ros_image_sync_data_.sub_rgb_sync_,
@@ -68,9 +68,6 @@ bool Client::nextImage(Image& image)
 
 void Client::imageCallback(sensor_msgs::ImageConstPtr rgb_image_msg, sensor_msgs::ImageConstPtr depth_image_msg)
 {
-  if (!ros_image_sync_data_.cam_model_.initialized())
-    return;
-
   cv_bridge::CvImagePtr img_ptr, depth_img_ptr;
 
   // Convert RGB image
@@ -115,11 +112,5 @@ void Client::imageCallback(sensor_msgs::ImageConstPtr rgb_image_msg, sensor_msgs
 }
 
 // ----------------------------------------------------------------------------------------
-
-void Client::camInfoCallback(const sensor_msgs::CameraInfoConstPtr& cam_info_msg)
-{
-  if (!ros_image_sync_data_.cam_model_.initialized())
-    ros_image_sync_data_.cam_model_.fromCameraInfo(cam_info_msg);
-}
 
 }

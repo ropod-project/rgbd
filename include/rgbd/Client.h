@@ -15,6 +15,7 @@
 
 // ROS message serialization
 #include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -22,19 +23,20 @@
 #include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <image_transport/subscriber_filter.h>
 
 namespace rgbd {
 
+typedef boost::shared_ptr<image_transport::ImageTransport> ImageTransportPtr;
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> KinectApproxPolicy;
 typedef boost::shared_ptr<message_filters::Synchronizer<KinectApproxPolicy> > SyncPtr;
-typedef boost::shared_ptr<message_filters::Subscriber<sensor_msgs::Image> > ImageSubPtr;
+typedef boost::shared_ptr<image_transport::SubscriberFilter> ImageSubPtr;
 
 struct ROSImageSyncData
 {
   ImageSubPtr sub_rgb_sync_;
   ImageSubPtr sub_depth_sync_;
   SyncPtr sync_;
-  ros::Subscriber sub_cam_info_;
   image_geometry::PinholeCameraModel cam_model_;
 };
 
@@ -58,7 +60,7 @@ public:
 
 protected:
 
-    void intializeROS(const std::string& rgb_image_topic, const std::string& depth_image_topic, const std::string& cam_info_topic);
+    void intializeROS();
 
     ros::NodeHandle nh_;
 
@@ -66,6 +68,7 @@ protected:
     ImagePtr image_ptr_;
 
     ROSImageSyncData ros_image_sync_data_;
+    ImageTransportPtr rgb_image_transport_, depth_image_transport_;
 
     void camInfoCallback(const sensor_msgs::CameraInfoConstPtr& cam_info_msg);
 

@@ -36,7 +36,7 @@ void Server::initialize(const std::string& name)
   rgb_image_transport_ = ImageTransportPtr(new image_transport::ImageTransport(ros::NodeHandle(nh_, "rgb")));
   depth_image_transport_ = ImageTransportPtr(new image_transport::ImageTransport(ros::NodeHandle(nh_, "depth_registered/sw_registered")));
   rgb_publisher_ = rgb_image_transport_->advertiseCamera("image_rect_color", 1, true);
-  depth_publisher_ = depth_image_transport_->advertiseCamera("image_rect_raw", 1, true);
+  depth_publisher_ = depth_image_transport_->advertiseCamera("image_rect", 1, true);
 }
 
 // ----------------------------------------------------------------------------------------
