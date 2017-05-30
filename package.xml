@@ -33,4 +33,5 @@
   <run_depend>sensor_msgs</run_depend>
   <run_depend>tue_serialization</run_depend>
   <run_depend>message_runtime</run_depend>
+  <run_depend>compressed_image_transport</run_depend>
 </package>
