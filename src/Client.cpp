@@ -22,21 +22,29 @@ Client::~Client()
 
 // ----------------------------------------------------------------------------------------
 
-void Client::initialize(const std::string& server_name)
+void Client::initialize(const std::string& server_name, bool compressed)
 {
   nh_ = ros::NodeHandle(server_name);
-  this->intializeROS();
+  this->intializeROS(compressed);
 }
 
 // ----------------------------------------------------------------------------------------
 
-void Client::intializeROS()
+void Client::intializeROS(bool compressed)
 {
   rgb_image_transport_ = ImageTransportPtr(new image_transport::ImageTransport(ros::NodeHandle(nh_, "rgb")));
   depth_image_transport_ = ImageTransportPtr(new image_transport::ImageTransport(ros::NodeHandle(nh_, "depth_registered/sw_registered")));
 
-  ros_image_sync_data_.sub_rgb_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*rgb_image_transport_, "image_rect_color", 1, image_transport::TransportHints("compressed")));
-  ros_image_sync_data_.sub_depth_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*depth_image_transport_, "image_rect_raw", 1));
+  if (compressed)
+  {
+    ros_image_sync_data_.sub_rgb_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*rgb_image_transport_, "image_rect_color", 1, image_transport::TransportHints("compressed")));
+    ros_image_sync_data_.sub_depth_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*depth_image_transport_, "image_rect", 1, image_transport::TransportHints("compressedDepth")));
+  }
+  else
+  {
+    ros_image_sync_data_.sub_rgb_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*rgb_image_transport_, "image_rect_color", 1));
+    ros_image_sync_data_.sub_depth_sync_ = ImageSubPtr(new image_transport::SubscriberFilter(*depth_image_transport_, "image_rect", 1));
+  }
 
   ros_image_sync_data_.sync_ = SyncPtr(new message_filters::Synchronizer<KinectApproxPolicy>
                                        (KinectApproxPolicy(10), *ros_image_sync_data_.sub_rgb_sync_,

@@ -50,7 +50,7 @@ public:
 
     virtual ~Client();
 
-    void initialize(const std::string& server_name);
+    void initialize(const std::string& server_name, bool compressed = false);
 
     bool initialized() { return ros_image_sync_data_.sync_.get(); }
 
@@ -60,7 +60,7 @@ public:
 
 protected:
 
-    void intializeROS();
+    void intializeROS(bool compressed);
 
     ros::NodeHandle nh_;
 
