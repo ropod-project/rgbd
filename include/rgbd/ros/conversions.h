@@ -14,6 +14,8 @@ bool convert(const cv::Mat& image, sensor_msgs::Image& image_msg);
 
 void convert(const geo::DepthCamera& cam_model, sensor_msgs::CameraInfo& cam_model_msg);
 
+bool convert(const cv::Mat& image, const geo::DepthCamera& cam_model, sensor_msgs::Image& image_msg, sensor_msgs::CameraInfo& cam_model_msg);
+
 }
 
 #endif

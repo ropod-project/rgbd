@@ -83,4 +83,35 @@ void convert(const geo::DepthCamera& cam_model, sensor_msgs::CameraInfo& cam_mod
     cam_model_msg.binning_y = 0;
 }
 
+bool convert(const cv::Mat& image, 
+             const geo::DepthCamera& cam_model, 
+             sensor_msgs::Image& image_msg, 
+             sensor_msgs::CameraInfo& cam_model_msg)
+{
+    convert(cam_model, cam_model_msg);
+    size_t width = cam_model_msg.width;
+    size_t height = cam_model_msg.height;
+
+    cv_bridge::CvImage image_cv_bridge;
+
+    cv::Mat img_rect;
+    if (image.type() == CV_32FC1) { // Depth image 
+        image_cv_bridge.encoding = "32FC1";
+        img_rect = cv::Mat(height, width, CV_32FC1, cv::Scalar(0));
+    }
+    else if (image.type() == CV_8UC3)  { // RGB image;
+        image_cv_bridge.encoding = "bgr8";
+        img_rect = cv::Mat(height, width, CV_8UC3, cv::Scalar(0, 0, 0));
+    }
+    else
+        return false;
+
+    // Create a ROI for the part of the image that we need to copy
+    cv::Rect crop_rect(0, 0, std::min(img_rect.cols, image.cols), std::min(img_rect.rows, image.rows));
+    image(crop_rect).copyTo(img_rect.rowRange(0, crop_rect.height).colRange(0, crop_rect.width));
+
+    image_cv_bridge.image = img_rect;
+    image_cv_bridge.toImageMsg(image_msg);
+}
+
 }
